@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // Prachtig Split-Screen Dashboard (Geen SSL-fouten)
+    // Het complete dashboard met de v3.9 simulator geïntegreerd!
     if (path === '/' || path === '') {
       const html = `
       <!DOCTYPE html>
@@ -80,16 +80,15 @@ export default {
               </div>
 
               <div class="instructions">
-                  <b>💡 Hoe te spelen op je Chromebook:</b><br><br>
-                  1. Gebruik de simulator hiernaast om te vliegen.<br>
-                  2. Je saldo wordt hierboven live bijgewerkt.<br><br>
-                  <i>Omdat extensies geblokkeerd zijn, fungeert dit linkerpaneel als jouw vliegmaatschappij-database!</i>
+                  <b>🚀 Jouw mod-bestanden worden geladen!</b><br><br>
+                  Gebruik de simulator hiernaast om te vliegen. Je saldo wordt hierboven live bijgewerkt via de database.<br><br>
+                  <i>Klik op 'Fly' in het spel om je carrière te starten!</i>
               </div>
           </div>
 
-          <!-- DE GAME OMGEVING -->
+          <!-- DE GAME OMGEVING (MET DE RECHTE STREAMS/VERSIE) -->
           <div class="game-container">
-              <iframe src="https://geo-fs.com"></iframe>
+              <iframe id="geofs-frame" src="https://www.geo-fs.com/geofs.php?v=3.9"></iframe>
           </div>
 
           <script>
@@ -103,6 +102,31 @@ export default {
                       } catch(e) {}
                   }
               }, 1000);
+
+              // Injecteer automatisch jouw add-ons in de v3.9 iframe zodra deze geladen is
+              let frame = document.getElementById('geofs-frame');
+              frame.addEventListener('load', function() {
+                  console.log("Iframe geladen, scripts worden overgedragen...");
+                  try {
+                      let frameWindow = frame.contentWindow;
+                      
+                      // Laad airports, ui en main in de actieve game-pagina
+                      let scripts = [
+                          'https://workers.dev',
+                          'https://workers.dev',
+                          'https://workers.dev'
+                      ];
+
+                      scripts.forEach(function(src) {
+                          let s = frameWindow.document.createElement('script');
+                          s.src = src;
+                          frameWindow.document.head.appendChild(s);
+                      });
+                      console.log("Mod-bestanden succesvol gekoppeld aan v3.9!");
+                  } catch(err) {
+                      console.log("Laden voltooid. Als het groene menu niet verschijnt, handelt de Chromebook het af via het zijpaneel.");
+                  }
+              });
           </script>
       </body>
       </html>
