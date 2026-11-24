@@ -1,5 +1,8 @@
 {
   "name": "geofs-economy-mod",
   "compatibility_date": "2026-11-24",
-  "main": "index.js"
+  "main": "index.js",
+  "build": {
+    "command": ""
+  }
 }
