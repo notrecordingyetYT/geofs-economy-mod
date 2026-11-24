@@ -3,109 +3,66 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // Prachtige Launcher Dashboard startpagina
+    // Als je de website bezoekt, trekt de Worker live GeoFS binnen en bouwt jouw menu erin!
     if (path === '/' || path === '') {
-      const html = `
-      <!DOCTYPE html>
-      <html lang="nl">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>GeoFS Career Mod - Dashboard</title>
-          <style>
-              body {
-                  margin: 0;
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                  color: white;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  height: 100vh;
-              }
-              .dashboard {
-                  background: rgba(255, 255, 255, 0.1);
-                  backdrop-filter: blur(10px);
-                  border-radius: 16px;
-                  padding: 30px;
-                  width: 450px;
-                  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-                  border: 1px solid rgba(255, 255, 255, 0.2);
-                  text-align: center;
-              }
-              h1 { margin-bottom: 5px; font-size: 28px; color: #4af37b; }
-              p { color: #ddd; margin-bottom: 25px; }
-              .stat-card {
-                  background: rgba(0, 0, 0, 0.3);
-                  padding: 15px;
-                  border-radius: 8px;
-                  margin-bottom: 20px;
-                  font-size: 20px;
-                  font-weight: bold;
-              }
-              .launch-btn {
-                  display: inline-block;
-                  width: 100%;
-                  padding: 15px;
-                  background: #28a745;
-                  color: white;
-                  text-decoration: none;
-                  border-radius: 8px;
-                  font-size: 18px;
-                  font-weight: bold;
-                  transition: background 0.3s;
-                  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-              }
-              .launch-btn:hover { background: #218838; }
-              .footer { margin-top: 25px; font-size: 12px; color: #bbb; }
-          </style>
-      </head>
-      <body>
-          <div class="dashboard">
-              <h1>✈️ GeoFS Career Launcher</h1>
-              <p>Beheer je vliegmaatschappij en verdien virtueel geld!</p>
-              
-              <div class="stat-card">
-                  💰 Ondernemingssaldo: <span id="dash-balance">$10.000</span>
-              </div>
+      try {
+        // 1. Haal de echte GeoFS pagina op vanaf hun server
+        const geofsResponse = await fetch('https://www.geo-fs.com/geofs.php');
+        let html = await geofsResponse.text();
 
-              <a href="https://geo-fs.com" target="_blank" class="launch-btn" id="launch-link">
-                  🚀 Start Simulator met Mod
-              </a>
+        // 2. Dit is de code van jouw dashboard die we in de spelsite gaan injecteren
+        const menuHTML = `
+        <div id="launcher-sidebar" style="position:fixed; top:10px; right:10px; width:280px; background:rgba(20,30,50,0.92); backdrop-filter:blur(5px); color:white; font-family:sans-serif; z-index:999999; padding:20px; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
+            <h2 style="margin:0 0 5px 0; font-size:20px; color:#4af37b; text-align:center;">✈️ Career Launcher</h2>
+            <p style="margin:0 0 15px 0; font-size:12px; color:#ccc; text-align:center;">Volledig geïntegreerd dashboard</p>
+            
+            <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:6px; font-size:18px; font-weight:bold; text-align:center; margin-bottom:15px; border:1px solid rgba(255,255,255,0.05);">
+                💰 Saldo: <span id="dash-balance">$10.000</span>
+            </div>
+            
+            <div style="font-size:11px; color:#aaa; text-align:center;">
+                Gebruik het vliegmenu links om je vlucht te starten.<br>Je voortgang wordt live bijgewerkt.
+            </div>
+        </div>
+        <script>
+            // Synchroniseer live het saldo met het dashboard
+            setInterval(function() {
+                let saved = localStorage.getItem('geofsEconMod_v1');
+                if (saved) {
+                    try {
+                        let state = JSON.parse(saved);
+                        document.getElementById('dash-balance').innerText = '$' + state.balance.toLocaleString();
+                    } catch(e) {}
+                }
+            }, 1000);
+        </script>
+        `;
 
-              <div class="footer">
-                  Gekoppeld met Cloudflare Workers & GitHub
-              </div>
-          </div>
+        // 3. Plak jouw menu en de mod-bestanden direct in de HTML-structuur van GeoFS
+        const scriptsInject = `
+        <script src="https://workers.dev"></script>
+        <script src="https://workers.dev"></script>
+        <script src="https://workers.dev"></script>
+        `;
 
-          <script>
-              // Haal het live saldo op uit de localStorage van de browser
-              let saved = localStorage.getItem('geofsEconMod_v1');
-              if (saved) {
-                  try {
-                      let state = JSON.parse(saved);
-                      document.getElementById('dash-balance').innerText = '$' + state.balance.toLocaleString();
-                  } catch(e) {}
-              }
+        // Voeg het menu toe aan de body, en laad direct de scripts in de head
+        html = html.replace('</body>', `${menuHTML}</body>`);
+        html = html.replace('</head>', `${scriptsInject}</head>`);
 
-              // Sla de injector-code op in het klembord van de gebruiker zodra ze klikken om het makkelijk te maken
-              document.getElementById('launch-link').addEventListener('click', function() {
-                  alert("De simulator opent in een nieuw tabblad! Klik in de adresbalk van de simulator en typ je mod-naam om hem te activeren.");
-              });
-          </script>
-      </body>
-      </html>
-      `;
-      return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+        return new Response(html, {
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+
+      } catch (err) {
+        return new Response('Fout bij het laden van GeoFS via de launcher', { status: 500 });
+      }
     }
 
-    // Bestanden doorsturen vanaf GitHub CDN (jsDelivr)
+    // Zorg dat de losse scripts bereikbaar blijven voor de simulator
     try {
       const githubUrl = `https://jsdelivr.net{path}`;
       const response = await fetch(githubUrl);
-      
-      if (!response.ok) return new Response('Bestand niet gevonden', { status: 404 });
-
+      if (!response.ok) return new Response('Niet gevonden', { status: 404 });
       const content = await response.text();
       return new Response(content, {
         headers: { 
